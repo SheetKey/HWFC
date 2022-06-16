@@ -1,0 +1,7 @@
+cradle:
+  cabal:
+    - path: "app/Main.hs"
+      component: "HWFC:exe:hwfc"
+
+    - path: "app/Database/Tiles.hs"
+      component: "HWFC:exe:hwfc"
