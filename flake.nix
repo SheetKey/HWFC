@@ -1,5 +1,5 @@
 {
-  description = "A Haskell project template.";
+  description = "Wave Function Collapse in Haskell";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
@@ -13,7 +13,7 @@
 
         haskellPackages = pkgs.haskellPackages;
 
-        packageName = "Generic";
+        packageName = "hwfc";
 
         jailbreakUnbreak = pkg:
           pkgs.haskell.lib.doJailbreak (pkg.overrideAttrs (_: { meta = { }; }));
