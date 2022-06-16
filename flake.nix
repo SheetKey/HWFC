@@ -37,6 +37,12 @@
             cabal-install
             haskell-language-server
             haskellPackages.implicit-hie
+            # Data.text
+            haskellPackages.text_2_0
+            # Sqlite for haskell
+            haskellPackages.sqlite-simple
+            # Raw string [r| ... |] syntax for SQLite
+            haskellPackages.raw-strings-qq
           ];
           inputsFrom = builtins.attrValues self.packages.${system};
         };
