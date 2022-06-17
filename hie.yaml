@@ -3,5 +3,8 @@ cradle:
     - path: "app/Main.hs"
       component: "HWFC:exe:hwfc"
 
+    - path: "app/Utils.hs"
+      component: "HWFC:exe:hwfc"
+
     - path: "app/Database/Tiles.hs"
       component: "HWFC:exe:hwfc"
