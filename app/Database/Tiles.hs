@@ -22,9 +22,10 @@ import Database.SQLite.Simple
       FromRow(..),
       Connection,
       ToRow(..),
-      Query )
+      Query, fold_ )
 import Database.SQLite.Simple.Types ( Null(..) )
 import Control.Exception (Exception, throwIO)
+import qualified Data.Vector as V
 
 data Tile = Tile {
     tileId :: Int
@@ -164,9 +165,15 @@ creatDatabase = do
   mapM_ print (rows :: [Tile])
   close conn
 
-getAllTiles :: IO ()
+-- A function to use with fold_ for SQLite queries
+rowToVector :: V.Vector Tile -> Tile -> IO (V.Vector Tile)
+rowToVector v t = return $ V.cons t v
+
+getAllTiles :: IO (V.Vector Tile)
 getAllTiles = do
   conn <- open "Tiles/test.db"
-  rows <- query_ conn allTiles
-  mapM_ print (rows :: [Tile])
+  -- rows <- query_ conn allTiles
+  rows <- fold_ conn allTiles V.empty rowToVector
+  mapM_ print (rows :: V.Vector Tile)
   close conn
+  return rows
