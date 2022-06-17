@@ -163,3 +163,10 @@ creatDatabase = do
   rows <- query_ conn allTiles
   mapM_ print (rows :: [Tile])
   close conn
+
+getAllTiles :: IO ()
+getAllTiles = do
+  conn <- open "Tiles/test.db"
+  rows <- query_ conn allTiles
+  mapM_ print (rows :: [Tile])
+  close conn
