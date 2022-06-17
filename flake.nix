@@ -43,6 +43,8 @@
             haskellPackages.sqlite-simple
             # Raw string [r| ... |] syntax for SQLite
             haskellPackages.raw-strings-qq
+            # Vectors
+            haskellPackages.vector
           ];
           inputsFrom = builtins.attrValues self.packages.${system};
         };

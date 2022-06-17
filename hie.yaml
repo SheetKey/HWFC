@@ -8,3 +8,6 @@ cradle:
 
     - path: "app/Database/Tiles.hs"
       component: "HWFC:exe:hwfc"
+
+    - path: "app/WF/Wave.hs"
+      component: "HWFC:exe:hwfc"
