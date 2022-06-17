@@ -6,7 +6,7 @@ module Database.Tiles where
 import Utils
 
 import Control.Applicative ()
-import Data.Text ( Text )
+import Data.Text ( Text, append )
 import Text.RawString.QQ ( r )
 import Data.Typeable ( Typeable )
 
@@ -57,7 +57,7 @@ createTiles = [r|
 CREATE TABLE IF NOT EXISTS tiles
   (id INTEGER PRIMARY KEY AUTOINCREMENT,
    name TEXT UNIQUE,
-   filePath TEXT UNIQUE,
+   filePath TEXT,
    tileRotation INTEGER,
    leftConnector INTEGER,
    rightConnector INTEGER,
@@ -98,19 +98,22 @@ getTile conn name = do
 data Rotation = None | Once | Twice | Thrice
 
 -- Creates a list of TileRows that can be used to create tiles
+--  ***NOTE***
+-- THIS FUNCTION TAKES CARE OF ROTATION OF CONNECTORS
+-- BUT NOT OF FILE ROTATION AS IT ONLY INCLUDES A PATH TO THE FILE
 createTileRow :: Text -> Text -> Rotation -> Int -> Int -> Int -> Int -> Int -> [TileRow]
 createTileRow name path rot l r u d w =
   case rot of
     None   -> [ (Null, name, path, 0, l, r, u, d, w) ]
     Once   -> [ (Null, name, path, 0, l, r, u, d, w)
-              , (Null, name, path, 90, l, r, u, d, w) ]
+              , (Null, append name "+90", path, 90, u, d, r, l, w) ]
     Twice  -> [ (Null, name, path, 0, l, r, u, d, w)
-              , (Null, name, path, 90, l, r, u, d, w)
-              , (Null, name, path, 180, l, r, u, d, w) ]
+              , (Null, append name "+90", path, 90, u, d, r, l, w)
+              , (Null, append name "+180", path, 180, r, l, d, u, w) ]
     Thrice -> [ (Null, name, path, 0, l, r, u, d, w)
-              , (Null, name, path, 90, l, r, u, d, w)
-              , (Null, name, path, 180, l, r, u, d, w)
-              , (Null, name, path, 270, l, r, u, d, w) ]
+              , (Null, append name "+90", path, 90, u, d, r, l, w)
+              , (Null, append name "+180", path, 180, r, l, d, u, w)
+              , (Null, append name "+270", path, 270, d, u, l, r, w) ]
 
 -- A helper function to get how many times a tile should be rotated
 rotGetLine :: IO Rotation
@@ -151,8 +154,12 @@ creatDatabase :: IO ()
 creatDatabase = do
   conn <- open "Tiles/test.db"
   execute_ conn createTiles
-  getInsertTile conn
-  getInsertTile conn
+  foldMap (execute conn insertTile) $ createTileRow "Test1"
+                                                    "./Tiles/Test1.png"
+                                                    Once 0 0 1 1 1
+  foldMap (execute conn insertTile) $ createTileRow "Test2"
+                                                    "./Tiles/Test2.png"
+                                                    Thrice 0 0 1 0 1
   rows <- query_ conn allTiles
   mapM_ print (rows :: [Tile])
   close conn
