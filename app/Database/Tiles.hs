@@ -94,8 +94,10 @@ getTile conn name = do
     [tile] -> return $ Just tile
     _ -> throwIO DuplicateData
 
+-- A type to deal with how many times a tile should be rotated
 data Rotation = None | Once | Twice | Thrice
 
+-- Creates a list of TileRows that can be used to create tiles
 createTileRow :: Text -> Text -> Rotation -> Int -> Int -> Int -> Int -> Int -> [TileRow]
 createTileRow name path rot l r u d w =
   case rot of
@@ -110,6 +112,7 @@ createTileRow name path rot l r u d w =
               , (Null, name, path, 180, l, r, u, d, w)
               , (Null, name, path, 270, l, r, u, d, w) ]
 
+-- A helper function to get how many times a tile should be rotated
 rotGetLine :: IO Rotation
 rotGetLine = do
   n <- intGetLine
@@ -122,6 +125,7 @@ rotGetLine = do
       putStrLn "Invalid input."
       rotGetLine
 
+-- A function to insert a new tile to a given connection 
 getInsertTile :: Connection -> IO ()
 getInsertTile conn = do
   myPutStr "Tile name: "
@@ -145,11 +149,10 @@ getInsertTile conn = do
 
 creatDatabase :: IO ()
 creatDatabase = do
-  conn <- open "test.db"
+  conn <- open "Tiles/test.db"
   execute_ conn createTiles
-  execute conn insertTile myRow
+  getInsertTile conn
+  getInsertTile conn
   rows <- query_ conn allTiles
   mapM_ print (rows :: [Tile])
   close conn
-  where myRow :: TileRow
-        myRow = (Null, "Test Tile", "not a real path", 0, 1, 1, 1, 1, 10)
