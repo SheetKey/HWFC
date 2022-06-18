@@ -45,6 +45,8 @@
             haskellPackages.raw-strings-qq
             # Vectors
             haskellPackages.vector
+            # Random
+            haskellPackages.random
           ];
           inputsFrom = builtins.attrValues self.packages.${system};
         };

@@ -3,7 +3,7 @@
 
 module Database.Tiles where
 
-import Utils
+import Utils ( myPutStr, intGetLine, textGetLine )
 
 import Control.Applicative ()
 import Data.Text ( Text, append )
@@ -16,11 +16,10 @@ import Database.SQLite.Simple
       execute_,
       open,
       query,
-      query_,
       field,
       Only(Only),
       FromRow(..),
-      Connection,
+      Connection (Connection),
       ToRow(..),
       Query, fold_ )
 import Database.SQLite.Simple.Types ( Null(..) )
@@ -161,19 +160,21 @@ creatDatabase = do
   foldMap (execute conn insertTile) $ createTileRow "Test2"
                                                     "./Tiles/Test2.png"
                                                     Thrice 0 0 1 0 1
-  rows <- query_ conn allTiles
-  mapM_ print (rows :: [Tile])
+  rows <- rowToVectorIO conn
+  mapM_ print (rows :: V.Vector Tile)
   close conn
 
 -- A function to use with fold_ for SQLite queries
 rowToVector :: V.Vector Tile -> Tile -> IO (V.Vector Tile)
 rowToVector v t = return $ V.cons t v
 
+rowToVectorIO :: Connection -> IO (V.Vector Tile)
+rowToVectorIO conn = fold_ conn allTiles V.empty rowToVector
+
 getAllTiles :: IO (V.Vector Tile)
 getAllTiles = do
   conn <- open "Tiles/test.db"
-  -- rows <- query_ conn allTiles
-  rows <- fold_ conn allTiles V.empty rowToVector
+  rows <- rowToVectorIO conn
   mapM_ print (rows :: V.Vector Tile)
   close conn
   return rows
