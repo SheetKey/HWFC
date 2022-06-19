@@ -1,7 +1,7 @@
 module Main where
 
 import Database.Tiles
-import WF.Wave
+import WF.WaveMain
 
 main :: IO ()
 main = waveMain

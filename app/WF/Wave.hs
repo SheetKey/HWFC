@@ -1,6 +1,7 @@
 module WF.Wave where
 
 import Database.Tiles ( Tile (downConnector, upConnector, rightConnector, leftConnector, tileId), getAllTiles )
+
 import qualified Data.Vector as V
 import Utils (myPutStr, intGetLine)
 import System.Random (randomRIO)
@@ -49,17 +50,13 @@ gridToWest w l g = leftConnector $ gridToTile w l 0 g
 
 printGrid :: Grid -> IO ()
 printGrid grid = do
-  -- DELETE
-  putStrLn "2"
-  go (V.length grid) (V.length (grid V.! 0)) grid []
+  go (V.length grid - 1) (V.length (grid V.! 0) - 1) grid []
   where
     go :: Width -> Length -> Grid -> [Int] -> IO ()
     go 0 0 grid xs = print $ gridToId 0 0 0 grid:xs
     go w 0 gird xs = do
       print $ gridToId w 0 0 grid:xs
-      -- DELETE
-      putStrLn "3"
-      go (w - 1) (V.length (grid V.! 0)) grid []
+      go (w - 1) (V.length (grid V.! 0) - 1) grid []
     go w l grid xs = go w (l - 1) grid $ gridToId w l 0 grid:xs
       
   
@@ -111,7 +108,7 @@ chooseCell w l = do
 
 -- Choose a random tile from the number of available tiles
 chooseTile :: Int -> IO Int
-chooseTile n = randomRIO (0, n)
+chooseTile n = randomRIO (0, n - 1)
 
 -- Takes the tile to pick, the cell to pick within, and the grid to updata.
 updateGrid :: Int -> Cell -> Grid -> Grid
@@ -125,8 +122,6 @@ updateTile :: Cell -> Grid -> IO Grid
 updateTile (x,y) grid = do
   let numOfTiles = V.length $ gridToTiles x y grid
   tileNum <- randomRIO (0, numOfTiles - 1)
-  -- DELETE
-  putStrLn "4"
   let newTile = V.singleton $ gridToTile x y tileNum grid
       newCell = CellInfo newTile 0
       newRow = (grid V.! x) V.// [(y, newCell)]
@@ -149,7 +144,7 @@ rowMin = cellEntropy . V.minimumBy myEntropyOrder
 -- Finds the minimum entroy in a grid
 -- Ensure this is not 0. If is 0 then done
 minEntropy :: Grid -> Int
-minEntropy g = minimum $ go g (V.length g)
+minEntropy g = minimum $ go g (V.length g - 1)
   where go :: Grid -> Int -> [Int]
         go g 0 = [rowMin $ g V.! 0]
         go g n = rowMin (g V.! n) : go g (n-1)
@@ -172,95 +167,4 @@ entropyIndices e g = go e g (V.length g)
         go :: Int -> Grid -> Int -> V.Vector Cell
         go e g 0 = helper e g 0
         go e g n = helper e g n V.++ go e g (n - 1)
-
--- Takes the last cell that was updated and the grid itslef
-propagate :: Cell -> Grid -> Grid
-propagate c g = go [c] (V.length g) (V.length (g V.! 0)) g
-  where
-    north x y l = [(x, y + 1) | (y + 1) <= l]
-    east  x y w = [(x + 1, y) | (x + 1) <= w]
-    south x y = [(x, y - 1) | (y - 1) >= 0]
-    west  x y = [(x - 1, y) | (x - 1) >= 0]
-    getNeighbors :: Cell -> Width -> Length -> [Cell]
-    getNeighbors (x,y) w l = north x y l ++ east x y l ++ south x y ++ west x y
-    validateNeighbors :: [Cell] -> Grid -> [Cell]
-    validateNeighbors [] _ = []
-    validateNeighbors (c:cs) g = case gridToEntropyCell c g of
-                                   0 -> validateNeighbors cs g
-                                   _ -> c : validateNeighbors cs g
-    neighbors :: Cell -> Width -> Length -> Grid -> [Cell]
-    neighbors c w l = validateNeighbors (getNeighbors c w l)
-    collapseNorth x y w l g = case north x y l of
-                           [] -> collapseEast x y w g
-                           [c] -> case gridToEntropyCell c g of
-                                    0 -> collapseEast x y w g
-                                    _ -> collapseEast x y w $ intersectTilesNorth x y c g
-                           _ -> throw $ PatternMatchFail "List has too many elements."
-    collapseEast x y w g = case east x y w of
-                             [] -> collapseSouth x y g
-                             [c] -> case gridToEntropyCell c g of
-                                      0 -> collapseSouth x y g
-                                      _ -> collapseSouth x y $ intersectTilesEast x y c g
-                             _ -> throw $ PatternMatchFail "List has too many elements."
-    collapseSouth x y g = case south x y  of
-                            [] -> collapseWest x y g
-                            [c] -> case gridToEntropyCell c g of
-                                     0 -> collapseWest x y g
-                                     _ -> collapseWest x y $ intersectTilesSouth x y c g
-                            _ -> throw $ PatternMatchFail "List has too many elements."
-    collapseWest x y g = case west x y  of
-                           [] -> g
-                           [c] -> case gridToEntropyCell c g of
-                                     0 -> g
-                                     _ -> intersectTilesWest x y c g
-                           _ -> throw $ PatternMatchFail "List has to many elements."
-    collapse :: Width -> Length -> Width -> Length -> Grid -> Grid
-    collapse = collapseNorth
-    go :: [Cell] -> Width -> Length -> Grid -> Grid
-    go [] w l g = undefined
-    go ((x,y):cs) w l g = go (neighbors (x,y) w l g ++ cs) w l $ collapse x y w l g
-
--- A method to choose the first tile.
--- Eventually add alternative methods that allow user
--- to choose the first tile.
-firstCollapse :: IO Grid
-firstCollapse = do
-  myPutStr "Horizontal number of tiles (width): "
-  w <- intGetLine
-  myPutStr "Verticle number of tiles (length): "
-  l <- intGetLine
-  tiles <- getAllTiles
-  let grid = initialGrid w l tiles
-  cell <- chooseCell w l
-  n <- chooseTile $ length tiles
-  return $ propagate cell $ updateGrid n cell grid
-
--- THE WAVE FUNCTION!!!!!
--- Repeat until all entropy is 0 or failure.
-wave :: Grid -> IO Grid
-wave grid = do
-  -- Determine the minimun entropy in the grid
-  case minEntropy grid of
-    -- When min entropy is 0 then its done
-    0 -> do
-      putStrLn "Finished!"
-      return grid
-    x -> do
-      let indices = entropyIndices x grid
-          indicesNum = V.length indices - 1
-      index <- randomRIO (0, indicesNum)
-      -- DELETE
-      putStrLn "1"
-      let cell = indices V.! index
-      -- Collapse the cell and create a new grid
-      newGrid <- updateTile cell grid
-      -- Propagate the wave through the new grid, updating all cells
-      wave $ propagate cell newGrid
-
--- CALL THIS
-waveMain :: IO ()
-waveMain = do
-  grid <- firstCollapse
-  finalGrid <- wave grid
-  printGrid finalGrid
 
