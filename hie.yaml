@@ -14,3 +14,6 @@ cradle:
 
     - path: "app/WF/WaveMain.hs"
       component: "HWFC:exe:hwfc"
+
+    - path: "app/Image/CreateImage.hs"
+      component: "HWFC:exe:hwfc"

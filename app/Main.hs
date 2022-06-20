@@ -4,4 +4,4 @@ import Database.Tiles
 import WF.WaveMain
 
 main :: IO ()
-main = putStrLn "Hi"
+main = waveMain
