@@ -69,12 +69,14 @@ createAdjacency tiles = M.fromList
 -- Requires random numbers if there are multiple cells with the same entropy
 entropyMinCells :: Entropy -> Maybe ([Cell], Int)
 entropyMinCells = M.foldrWithKey
-                  (\k a b -> case b of
-                               Nothing       -> Just ([k], a)
-                               Just (bk, be) -> case compare a be of
-                                                  GT -> b
-                                                  EQ -> Just (k:bk, a)
-                                                  LT -> Just ([k], a)
+                  (\k a b -> case a of
+                               0 -> throw $ AssertionFailed "Zero entropy found."
+                               _ -> case b of
+                                      Nothing       -> Just ([k], a)
+                                      Just (bk, be) -> case compare a be of
+                                                         GT -> b
+                                                         EQ -> Just (k:bk, a)
+                                                         LT -> Just ([k], a)
                   )
                   Nothing
 
@@ -82,12 +84,14 @@ entropyMinCells = M.foldrWithKey
 -- Doesnt require use of random numbers if there are multiple cells with the same entroy
 entropyMin :: Entropy -> Maybe (Cell, Int)
 entropyMin = M.foldrWithKey
-             (\k a b -> case b of
-                          Nothing       -> Just (k, a)
-                          Just (_, be) -> case compare a be of
-                                            GT -> b
-                                            EQ -> Just (k, a)
-                                            LT -> Just (k, a)
+             (\k a b -> case a of
+                          0 -> throw $ AssertionFailed "Zero entropy found."
+                          _ -> case b of
+                                 Nothing       -> Just (k, a)
+                                 Just (_, be) -> case compare a be of
+                                                   GT -> b
+                                                   EQ -> Just (k, a)
+                                                   LT -> Just (k, a)
              )
              Nothing
 
