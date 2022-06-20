@@ -1,136 +1,94 @@
 module WF.WaveMain where
 
-import WF.Wave
-    ( minEntropy,
-      updateGrid,
-      chooseTile,
-      chooseCell,
-      initialGrid,
-      Grid,
-      entropyIndices,
-      updateTile,
-      printGrid, Length, Width, CellInfo (cellEntropy) )
-import WF.Propagate ( propagate, debugPropagate )
-import Utils
-import Database.Tiles
-
+import Database.Tiles (getAllTiles, Tile (downConnector, tileId))
+import WF2.Wave
+import Utils (myPutStr, intGetLine)
 import qualified Data.Vector as V
-import System.Random (randomRIO)
-import GHC.IO.Encoding.UTF16 (utf16_encode)
+import qualified Data.Map as M
+import Control.Exception (AssertionFailed(AssertionFailed), throw)
 
--- A method to choose the first tile.
--- Eventually add alternative methods that allow user
--- to choose the first tile.
-firstCollapse :: IO ((Width, Length), Grid)
-firstCollapse = do
+startWave :: IO (Grid,Entropy,Adjacency)
+startWave = do
   myPutStr "Horizontal number of tiles (width): "
-  w <- intGetLine
+  xmax <- intGetLine
   myPutStr "Verticle number of tiles (length): "
-  l <- intGetLine
+  ymax <- intGetLine
   tiles <- getAllTiles
-  let grid = initialGrid w l tiles
-  cell <- chooseCell w l
-  n <- chooseTile $ length tiles
-  return ((w,l),propagate [cell] w l $ updateGrid n cell grid)
+  let fstGrid = createGrid tiles xmax ymax
+      fstEntr = createEntropy tiles xmax ymax
+      adjacencies = createAdjacency tiles
+      fstEmin = entropyMin fstEntr
+  case fstEmin of
+    Nothing -> throw $ AssertionFailed "No min entropy"
+    Just (cell,_) -> do
+      (sndGrid,sndEntr) <- updateGridandEntropy cell fstGrid fstEntr
+      let (thdGrid,thdEntr) = propagate adjacencies cell sndEntr sndGrid
+      return (thdGrid,thdEntr,adjacencies)
+
+
+wave :: (Grid,Entropy,Adjacency) -> IO Grid
+wave (grid,entr,adja) = do
+  if M.null entr
+    then do
+    putStrLn "Finished!"
+    return grid
+    else do
+    let emin = entropyMin entr
+    case emin of
+      Nothing -> throw $ AssertionFailed "No min entropy"
+      Just (cell,_) -> do
+        (sndGrid,sndEntr) <- updateGridandEntropy cell grid entr
+        let (thdGrid,thdEntr) = propagate adja cell sndEntr sndGrid
+        wave (thdGrid,thdEntr,adja)
+        
+waveMain :: IO ()
+waveMain = do
+  start <- startWave
+  grid <- wave start
+  print $ (fmap . fmap) tileId grid
+
+
+t = do
+  myPutStr "Horizontal number of tiles (width): "
+  xmax <- intGetLine
+  myPutStr "Verticle number of tiles (length): "
+  ymax <- intGetLine
+  tiles <- getAllTiles
+  let fstGrid = createGrid tiles xmax ymax
+      fstEntr = createEntropy tiles xmax ymax
+      fstAdja = createAdjacency tiles
+      fstEmin = entropyMin fstEntr
+  case fstEmin of
+    Nothing -> putStrLn "firstEmin found Nothing"
+    Just (cell,_) -> do
+      (sndGrid,sndEntr) <- updateGridandEntropy cell fstGrid fstEntr
+      let (thdGrid,thdEntr) = propagate fstAdja cell sndEntr sndGrid
+      print thdGrid
+      print thdEntr
 
 test = do
   myPutStr "Horizontal number of tiles (width): "
-  w <- intGetLine
+  xmax <- intGetLine
   myPutStr "Verticle number of tiles (length): "
-  l <- intGetLine
+  ymax <- intGetLine
   tiles <- getAllTiles
-  let grid = initialGrid w l tiles
-  cell <- chooseCell w l
-  n <- chooseTile $ length tiles
-  let newGrid = propagate [cell] w l $ updateGrid n cell grid
-  printGrid newGrid
-  let minEnt = minEntropy newGrid
-  myPutStr "Min entropy: "
-  print minEnt 
-  let indices = entropyIndices minEnt newGrid
-      indicesNum = V.length indices - 1
-  print indicesNum
-  index <- randomRIO (0, indicesNum)
-  let newCell = indices V.! index
-  print newCell
-  newerGrid <- updateTile newCell newGrid
-  printGrid newerGrid
-  putStrLn "newestGrid"
-  let newestGrid = propagate [newCell] w l newerGrid
-  printGrid newestGrid
-
-testWave = do
-  myPutStr "Horizontal number of tiles (width): "
-  w <- intGetLine
-  myPutStr "Verticle number of tiles (length): "
-  l <- intGetLine
-  tiles <- getAllTiles
-  let grid = initialGrid w l tiles
-  newGrid <- debugWave w l grid
-  printGrid newGrid
-
-testWave2 = do
-  tiles <- getAllTiles
-  let grid = initialGrid 4 5 tiles
-  newGrid <- debugWave 4 5 grid
-  printGrid newGrid
+  let fstGrid = createGrid tiles xmax ymax
+      fstEntr = createEntropy tiles xmax ymax
+      fstAdja = createAdjacency tiles
+      fstEmin = entropyMin fstEntr
+  case fstEmin of
+    Nothing -> putStrLn "firstEmin found Nothing"
+    Just (cell,_) -> do
+      (sndGrid,sndEntr) <- updateGridandEntropy cell fstGrid fstEntr
+      case north cell sndEntr of
+        Nothing -> putStrLn "Found nothing to north"
+        Just x  ->
+          case sndGrid M.! x of
+            Right _ -> putStrLn "north found collapsed cell"
+            Left tileses ->
+              let adj = cellToAdjacencies cell sndGrid North fstAdja
+              in if vecIsSubset tileses adj
+                 then putStrLn "vec is subset"
+                 else print $ intersectTilesWithAdj adj x sndEntr sndGrid
 
 
-debugWave :: Width -> Length -> Grid -> IO Grid
-debugWave w l grid = do
-  -- Determine the minimun entropy in the grid
-  myPutStr "minEntropy grid: "
-  print $ minEntropy grid
-  case minEntropy grid of
-    -- When min entropy is 0 then its done
-    0 -> do
-      putStrLn "Finished!"
-      return grid
-    x -> do
-      myPutStr "entropyIndices x grid: "
-      print $ entropyIndices x grid
-      myPutStr "V.length indices - 1: "
-      print $ V.length (entropyIndices x grid) - 1
-      let indices = entropyIndices x grid
-          indicesNum = V.length indices - 1
-      index <- randomRIO (0, indicesNum)
-      myPutStr "index: "
-      print index
-      let cell = indices V.! index
-      -- Collapse the cell and create a new grid
-      newGrid <- updateTile cell grid
-      myPutStr "newGrid: "
-      printGrid newGrid
-      putStrLn "debugPropagate [cell] w l newGrid: "
-      newerGrid <- debugPropagate [cell] w l newGrid
-      myPutStr "newerGrid: "
-      printGrid newerGrid
-      -- Propagate the wave through the new grid, updating all cells
-      debugWave w l newerGrid
-
--- THE WAVE FUNCTION!!!!!
--- Repeat until all entropy is 0 or failure.
-wave :: Width -> Length -> Grid -> IO Grid
-wave w l grid = do
-  -- Determine the minimun entropy in the grid
-  case minEntropy grid of
-    -- When min entropy is 0 then its done
-    0 -> do
-      putStrLn "Finished!"
-      return grid
-    x -> do
-      let indices = entropyIndices x grid
-          indicesNum = V.length indices - 1
-      index <- randomRIO (0, indicesNum)
-      let cell = indices V.! index
-      -- Collapse the cell and create a new grid
-      newGrid <- updateTile cell grid
-      -- Propagate the wave through the new grid, updating all cells
-      wave w l $ propagate [cell] w l newGrid
-
--- CALL THIS
-waveMain :: IO ()
-waveMain = do
-  trio <- firstCollapse
-  finalGrid <- uncurry (uncurry wave) trio
-  printGrid finalGrid

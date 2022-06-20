@@ -30,9 +30,7 @@ executable hwfc
     other-modules:    Utils
                     , Database.Tiles
                     , WF.Wave
-                    , WF.Propagate
                     , WF.WaveMain
-                    , WF2.Wave
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
