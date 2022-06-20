@@ -159,7 +159,7 @@ rowEntropyIndices e = V.findIndices (entropyIsCellInfoElem e)
 -- Finds the indices with a certain entropy in grid.
 -- Use randomRIO to choose one of these cells
 entropyIndices :: Int -> Grid -> V.Vector Cell
-entropyIndices e g = go e g (V.length g)
+entropyIndices e g = go e g (V.length g - 1)
   where f :: Int -> Int -> (Int, Int)
         f n i = (n,i)
         helper :: Int -> Grid -> Int -> V.Vector Cell

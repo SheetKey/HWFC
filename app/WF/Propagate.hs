@@ -10,7 +10,7 @@ import WF.Wave
       intersectTilesWest,
       intersectTilesEast,
       intersectTilesNorth,
-      intersectTilesSouth )
+      intersectTilesSouth, printGrid )
 import Utils (myPutStr, intGetLine)
 
 import Control.Exception (throw, PatternMatchFail (PatternMatchFail), AssertionFailed (AssertionFailed))
@@ -87,10 +87,17 @@ propagate [] _ _ g = g
 propagate ((x, y):cs) w l g = propagate newCells w l $ collapse x y w l g
   where newCells = fromMaybe [] (neighbors (x, y) w l g)
 
--- Takes the last cell that was updated and the grid itslef
---propagateOLD :: Cell -> Grid -> Grid
---propagateOLD c g = go [c] (V.length g) (V.length (g V.! 0)) g
---  where
---    go :: [Cell] -> Width -> Length -> Grid -> Grid
---    go [] w l g = undefined
---    go ((x,y):cs) w l g = go (neighbors (x,y) w l g ++ cs) w l $ collapse x y w l g
+
+debugPropagate :: [Cell] -> Width -> Length -> Grid -> IO Grid
+debugPropagate [] _ _ g = return g
+debugPropagate ((x, y):cs) w l g = do
+  let neighbs = neighbors (x, y) w l g
+  myPutStr "neighbs: "
+  print neighbs
+  let newCells = fromMaybe [] neighbs
+  myPutStr "newCells: "
+  print newCells
+  let newG = collapse x y w l g
+  myPutStr "newG: "
+  printGrid newG
+  debugPropagate newCells w l newG

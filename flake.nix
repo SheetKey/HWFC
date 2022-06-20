@@ -47,6 +47,8 @@
             haskellPackages.vector
             # Random
             haskellPackages.random
+            # For Data.Map and others
+            haskellPackages.containers_0_6_5_1
           ];
           inputsFrom = builtins.attrValues self.packages.${system};
         };

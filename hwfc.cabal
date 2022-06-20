@@ -32,6 +32,7 @@ executable hwfc
                     , WF.Wave
                     , WF.Propagate
                     , WF.WaveMain
+                    , WF2.Wave
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -41,5 +42,6 @@ executable hwfc
                     , raw-strings-qq
                     , vector
                     , random
+                    , containers
     hs-source-dirs:   app
     default-language: Haskell2010

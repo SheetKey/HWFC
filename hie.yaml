@@ -17,3 +17,6 @@ cradle:
 
     - path: "app/WF/WaveMain.hs"
       component: "HWFC:exe:hwfc"
+
+    - path: "app/WF2/Wave.hs"
+      component: "HWFC:exe:hwfc"

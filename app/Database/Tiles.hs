@@ -26,8 +26,10 @@ import Database.SQLite.Simple.Types ( Null(..) )
 import Control.Exception (Exception, throwIO)
 import qualified Data.Vector as V
 
+type TileId = Int
+
 data Tile = Tile {
-    tileId :: Int
+    tileId :: TileId
   , tileName :: Text
   , tileFilePath :: Text
   , tileRotation :: Int
