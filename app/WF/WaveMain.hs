@@ -1,7 +1,7 @@
 module WF.WaveMain where
 
 import Database.Tiles (getAllTiles, Tile (downConnector, tileId))
-import WF2.Wave
+import WF.Wave
 import Utils (myPutStr, intGetLine)
 import qualified Data.Vector as V
 import qualified Data.Map as M
