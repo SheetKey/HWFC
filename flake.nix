@@ -49,6 +49,8 @@
             haskellPackages.random
             # For Data.Map and others
             haskellPackages.containers_0_6_5_1
+            # Image processing
+            haskellPackages.hip
           ];
           inputsFrom = builtins.attrValues self.packages.${system};
         };
