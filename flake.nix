@@ -51,6 +51,8 @@
             haskellPackages.containers_0_6_5_1
             # Image processing
             haskellPackages.hip
+            # hip dependency
+            zlib
           ];
           inputsFrom = builtins.attrValues self.packages.${system};
         };
