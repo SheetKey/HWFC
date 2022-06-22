@@ -1,4 +1,26 @@
-module WF.Wave where
+module WF.Wave
+  ( Adjacency (..)
+  , Entropy (..)
+  , Grid (..)
+  , FinalGrid (..)
+  , Cell (..)
+  , Direction (..)
+  , gridToOrderedFG
+  , createGrid
+  , createEntropy
+  , createAdjacency
+  , entropyMin
+  , entropyMinCells
+  , updateGridandEntropy
+  , north
+  , east
+  , south
+  , west
+  , vecIsSubset
+  , cellToAdjacencies
+  , intersectTilesWithAdj
+  , propagate
+  ) where
 
 import Database.Tiles
     ( Tile(downConnector, upConnector, leftConnector, rightConnector,
@@ -11,6 +33,7 @@ import qualified Data.Map as M
 import Control.Exception (throw, ArrayException (IndexOutOfBounds), AssertionFailed (AssertionFailed))
 import System.Random (randomRIO)
 import Debug.Trace (trace)
+import Data.List (sort)
 
 type XMax = Int
 type YMax = Int
@@ -22,8 +45,45 @@ data Direction = North | East | South | West deriving (Eq, Ord, Show)
 type GridMap a = M.Map Cell a
 
 type Grid = GridMap (Either (V.Vector Tile) Tile)
+type FinalGrid = GridMap Tile
 type Entropy = GridMap Int
 type Adjacency = M.Map (TileId, Direction) (V.Vector Tile)
+
+
+finalGrid :: Grid -> Maybe FinalGrid
+finalGrid = M.foldrWithKey 
+  (\k a b -> case b of
+               Nothing -> Nothing
+               Just fg -> case a of
+                            Left _     -> Nothing
+                            Right tile -> Just (M.insert k tile fg)) (Just M.empty)
+
+cells :: FinalGrid -> [Cell]
+cells = M.foldrWithKey (\k _ ks -> k:ks) []
+
+cellsByRow :: [Cell] -> [[Cell]]
+cellsByRow cs = if length sorted `mod` (xnum + 1) == 0
+                then go sorted xnum
+                else throw $ AssertionFailed "Wrong number of cells."
+  where sorted = sort cs
+        xnum = fst $ last sorted
+        go [] x = []
+        go cells x = take (x + 1) cells : go (drop (x + 1) cells) x
+
+-- Should only be called with a sorted list of cells
+orderRow :: [Cell] -> FinalGrid -> [Tile]
+orderRow []     _  = []
+orderRow (c:cs) fg = fg M.! c : orderRow cs fg
+
+orderGrid :: [[Cell]] -> FinalGrid -> [[Tile]]
+orderGrid []       _  = []
+orderGrid (cs:css) fg = orderRow cs fg : orderGrid css fg
+
+gridToOrderedFG :: Grid -> Maybe [[Tile]]
+gridToOrderedFG grid = do
+  fg <- finalGrid grid
+  let fgCellRows = cellsByRow $ cells fg
+  return $ orderGrid fgCellRows fg
 
 createGrid :: V.Vector Tile -> XMax -> YMax -> Grid
 createGrid tiles xMax yMax = M.fromList
