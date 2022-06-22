@@ -2,6 +2,20 @@ module WF.WaveMain where
 
 import Database.Tiles (getAllTiles, Tile (downConnector, tileId))
 import WF.Wave
+    ( Adjacency,
+      Entropy,
+      Grid,
+      Direction(North),
+      createGrid,
+      createEntropy,
+      createAdjacency,
+      entropyMin,
+      updateGridandEntropy,
+      north,
+      vecIsSubset,
+      cellToAdjacencies,
+      intersectTilesWithAdj,
+      propagate )
 import Utils (myPutStr, intGetLine)
 import qualified Data.Vector as V
 import qualified Data.Map as M
@@ -41,11 +55,10 @@ wave (grid,entr,adja) = do
         let (thdGrid,thdEntr) = propagate adja cell sndEntr sndGrid
         wave (thdGrid,thdEntr,adja)
         
-waveMain :: IO ()
+waveMain :: IO Grid
 waveMain = do
   start <- startWave
-  grid <- wave start
-  print $ (fmap . fmap) tileId grid
+  wave start
 
 
 t = do
