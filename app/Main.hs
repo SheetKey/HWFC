@@ -1,7 +1,11 @@
 module Main where
 
-import Database.Tiles
-import WF.WaveMain
+import WF.WaveMain (waveMain)
+import qualified Graphics.Image.IO as I
+import Image.CreateImage (gridToImage)
 
 main :: IO ()
-main = waveMain
+main = do
+  grid <- waveMain
+  image <- gridToImage grid
+  I.writeImage "testImage.png" image
