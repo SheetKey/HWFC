@@ -7,5 +7,6 @@ import Image.CreateImage (gridToImage)
 main :: IO ()
 main = do
   grid <- waveMain
+  print grid
   image <- gridToImage grid
   I.writeImage "testImage.png" image
