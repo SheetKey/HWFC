@@ -24,14 +24,14 @@ rowImage [t] = tileImage t
 rowImage (t:ts) = do
   image1 <- tileImage t
   image2 <- rowImage ts
-  return $ I.leftToRight image1 image2
+  return $ I.topToBottom image2 image1
 
 gridImage :: [[Tile]] -> IO (I.Image I.VU I.RGBA Double)
 gridImage [ps] = rowImage ps
 gridImage (ps:pss) = do
   image1 <- rowImage ps
   image2 <- gridImage pss
-  return $ I.topToBottom image2 image1
+  return $ I.leftToRight image1 image2
 
 
 gridToImage :: Grid -> IO (I.Image I.VU I.RGBA Double)
