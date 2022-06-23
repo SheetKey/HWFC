@@ -5,6 +5,7 @@ module WF.Wave
   , FinalGrid (..)
   , Cell (..)
   , Direction (..)
+  , finalGrid
   , gridToOrderedFG
   , createGrid
   , createEntropy
@@ -62,13 +63,14 @@ cells :: FinalGrid -> [Cell]
 cells = M.foldrWithKey (\k _ ks -> k:ks) []
 
 cellsByRow :: [Cell] -> [[Cell]]
-cellsByRow cs = if length sorted `mod` (xnum + 1) == 0
-                then go sorted xnum
+cellsByRow cs = if length sorted `mod` (ynum + 1) == 0
+                then go sorted ynum
                 else throw $ AssertionFailed "Wrong number of cells."
   where sorted = sort cs
-        xnum = fst $ last sorted
-        go [] x = []
-        go cells x = take (x + 1) cells : go (drop (x + 1) cells) x
+        --xnum = fst $ last sorted
+        ynum = snd $ last sorted
+        go [] _ = []
+        go cells y = take (y + 1) cells : go (drop (y + 1) cells) y
 
 -- Should only be called with a sorted list of cells
 orderRow :: [Cell] -> FinalGrid -> [Tile]
