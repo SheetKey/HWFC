@@ -156,6 +156,15 @@ getInsertTile conn = do
 
 createDatabase :: IO ()
 createDatabase = do
+  myPutStr "Database path: "
+  path <- myGetLine
+  conn <- open path
+  execute_ conn createTiles
+  close conn
+  putStrLn "Success."
+
+testCreateDatabase :: IO ()
+testCreateDatabase = do
   conn <- open "Tiles/test.db"
   execute_ conn createTiles
   foldMap (execute conn insertTile) $ createTileRow "Test1"
