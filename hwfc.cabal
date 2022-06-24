@@ -43,5 +43,8 @@ executable hwfc
                     , random
                     , containers
                     , hip
+                    , random-fu
+                    , rvar
+                    , mtl
     hs-source-dirs:   app
     default-language: Haskell2010

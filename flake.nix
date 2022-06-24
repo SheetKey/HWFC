@@ -53,6 +53,11 @@
             haskellPackages.hip
             # hip dependency
             zlib
+            # Categorical distribution (Weighted probability)
+            haskellPackages.random-fu
+            haskellPackages.rvar
+            # State
+            haskellPackages.mtl_2_2_2
           ];
           inputsFrom = builtins.attrValues self.packages.${system};
         };
