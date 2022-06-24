@@ -181,9 +181,10 @@ updateGridandEntropy c g e =
     (Just eitherTile, _) -> case eitherTile of
                               Right _    -> throw $ AssertionFailed "Cell already collapsed."
                               Left tiles -> do
-                                let num = V.length tiles - 1
-                                choice <- randomRIO (0, num)
-                                let newGrid = M.insert c (Right (tiles V.! choice)) g
+                                -- let num = V.length tiles - 1
+                                -- choice <- randomRIO (0, num)
+                                tileChoice <- weightedChoice tiles
+                                let newGrid = M.insert c (Right tileChoice) g
                                     newEntropy = M.delete c e
                                 return (newGrid, newEntropy)
 
