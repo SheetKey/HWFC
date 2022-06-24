@@ -58,6 +58,8 @@
             haskellPackages.rvar
             # State
             haskellPackages.mtl_2_2_2
+            # Command line options
+            haskellPackages.options
           ];
           inputsFrom = builtins.attrValues self.packages.${system};
         };

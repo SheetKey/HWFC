@@ -17,3 +17,6 @@ cradle:
 
     - path: "app/Image/CreateImage.hs"
       component: "HWFC:exe:hwfc"
+
+    - path: "app/MainOptions.hs"
+      component: "HWFC:exe:hwfc"
