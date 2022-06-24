@@ -152,15 +152,18 @@ getInsertTile conn = do
   w <- intGetLine
   foldMap (execute conn insertTile) $ createTileRow name path rot l r u d w
 
-creatDatabase :: IO ()
-creatDatabase = do
+createDatabase :: IO ()
+createDatabase = do
   conn <- open "Tiles/test.db"
   execute_ conn createTiles
   foldMap (execute conn insertTile) $ createTileRow "Test1"
                                                     "./Tiles/Test1.png"
-                                                    Once 0 0 1 1 1
+                                                    Once 0 0 1 1 10
   foldMap (execute conn insertTile) $ createTileRow "Test2"
                                                     "./Tiles/Test2.png"
+                                                    Thrice 0 0 1 0 10
+  foldMap (execute conn insertTile) $ createTileRow "Test3"
+                                                    "./Tiles/Test3.png"
                                                     Thrice 0 0 1 0 1
   rows <- rowToVectorIO conn
   mapM_ print (rows :: V.Vector Tile)
@@ -170,6 +173,7 @@ createNewTile :: IO ()
 createNewTile = do
   conn <- open "Tiles/test.db"
   getInsertTile conn
+  rows <- rowToVectorIO conn
   mapM_ print (rows :: V.Vector Tile)
   close conn
 
