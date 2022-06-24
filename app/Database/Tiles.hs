@@ -166,6 +166,13 @@ creatDatabase = do
   mapM_ print (rows :: V.Vector Tile)
   close conn
 
+createNewTile :: IO ()
+createNewTile = do
+  conn <- open "Tiles/test.db"
+  getInsertTile conn
+  mapM_ print (rows :: V.Vector Tile)
+  close conn
+
 -- A function to use with fold_ for SQLite queries
 rowToVector :: V.Vector Tile -> Tile -> IO (V.Vector Tile)
 rowToVector v t = return $ V.cons t v
@@ -180,3 +187,4 @@ getAllTiles = do
   mapM_ print (rows :: V.Vector Tile)
   close conn
   return rows
+
