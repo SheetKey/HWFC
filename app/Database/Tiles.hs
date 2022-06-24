@@ -3,7 +3,7 @@
 
 module Database.Tiles where
 
-import Utils ( myPutStr, intGetLine, textGetLine )
+import Utils ( myPutStr, intGetLine, textGetLine, myGetLine )
 
 import Control.Applicative ()
 import Data.Text ( Text, append )
@@ -21,7 +21,9 @@ import Database.SQLite.Simple
       FromRow(..),
       Connection (Connection),
       ToRow(..),
-      Query, fold_ )
+      Query, fold_, executeNamed,
+      NamedParam(..)
+    )
 import Database.SQLite.Simple.Types ( Null(..) )
 import Control.Exception (Exception, throwIO)
 import qualified Data.Vector as V
@@ -58,7 +60,7 @@ createTiles :: Query
 createTiles = [r|
 CREATE TABLE IF NOT EXISTS tiles
   (id INTEGER PRIMARY KEY AUTOINCREMENT,
-   name TEXT UNIQUE,
+   name TEXT,
    filePath TEXT,
    tileRotation INTEGER,
    leftConnector INTEGER,
@@ -108,14 +110,14 @@ createTileRow name path rot l r u d w =
   case rot of
     None   -> [ (Null, name, path, 0, l, r, u, d, w) ]
     Once   -> [ (Null, name, path, 0, l, r, u, d, w)
-              , (Null, append name "+90", path, 90, u, d, r, l, w) ]
+              , (Null, name, path, 90, u, d, r, l, w) ]
     Twice  -> [ (Null, name, path, 0, l, r, u, d, w)
-              , (Null, append name "+90", path, 90, u, d, r, l, w)
-              , (Null, append name "+180", path, 180, r, l, d, u, w) ]
+              , (Null, name, path, 90, u, d, r, l, w)
+              , (Null, name, path, 180, r, l, d, u, w) ]
     Thrice -> [ (Null, name, path, 0, l, r, u, d, w)
-              , (Null, append name "+90", path, 90, u, d, r, l, w)
-              , (Null, append name "+180", path, 180, r, l, d, u, w)
-              , (Null, append name "+270", path, 270, d, u, l, r, w) ]
+              , (Null, name, path, 90, u, d, r, l, w)
+              , (Null, name, path, 180, r, l, d, u, w)
+              , (Null, name, path, 270, d, u, l, r, w) ]
 
 -- A helper function to get how many times a tile should be rotated
 rotGetLine :: IO Rotation
@@ -169,13 +171,22 @@ createDatabase = do
   mapM_ print (rows :: V.Vector Tile)
   close conn
 
-createNewTile :: IO ()
-createNewTile = do
+insertNewTile :: IO ()
+insertNewTile = do
   conn <- open "Tiles/test.db"
   getInsertTile conn
   rows <- rowToVectorIO conn
   mapM_ print (rows :: V.Vector Tile)
   close conn
+
+changeWeight :: Connection -> IO ()
+changeWeight conn = do
+  myPutStr "Name to update: "
+  name <- myGetLine 
+  myPutStr "New weight: "
+  weight <- intGetLine
+  executeNamed conn "UPDATE tiles SET tileWeight = :w WHERE name = :n" [":w" := weight, ":n" := name]
+  
 
 -- A function to use with fold_ for SQLite queries
 rowToVector :: V.Vector Tile -> Tile -> IO (V.Vector Tile)
