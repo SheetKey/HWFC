@@ -164,7 +164,7 @@ createDatabase = do
                                                     Thrice 0 0 1 0 10
   foldMap (execute conn insertTile) $ createTileRow "Test3"
                                                     "./Tiles/Test3.png"
-                                                    Thrice 0 0 1 0 1
+                                                    Thrice 0 1 0 1 1
   rows <- rowToVectorIO conn
   mapM_ print (rows :: V.Vector Tile)
   close conn
