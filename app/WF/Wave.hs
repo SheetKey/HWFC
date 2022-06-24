@@ -25,16 +25,20 @@ module WF.Wave
 
 import Database.Tiles
     ( Tile(downConnector, upConnector, leftConnector, rightConnector,
-           tileId),
+           tileId, tileWeight),
       TileId )
 
 
 import qualified Data.Vector as V
 import qualified Data.Map as M
 import Control.Exception (throw, ArrayException (IndexOutOfBounds), AssertionFailed (AssertionFailed))
-import System.Random (randomRIO)
+import System.Random (randomRIO, getStdGen)
 import Debug.Trace (trace)
 import Data.List (sort)
+import Data.Random.Distribution.Categorical (weightedCategorical)
+import Data.Random.RVar (runRVar)
+import Data.RVar (sampleStateRVar)
+import Control.Monad.State (runState)
 
 type XMax = Int
 type YMax = Int
@@ -157,7 +161,15 @@ entropyMin = M.foldrWithKey
                                                    LT -> Just (k, a)
              )
              Nothing
-
+-- Choice function to be used by 'updateGridandEntropy'
+weightedChoice :: V.Vector Tile -> IO Tile
+weightedChoice tiles = do
+  let weightList :: [ (Double, Tile) ]
+      weightList = [ (fromIntegral $ tileWeight tile, tile) | tile <- V.toList tiles ]
+      tileRVar = weightedCategorical weightList
+  thing <- fmap (runState (sampleStateRVar tileRVar)) getStdGen
+  return $ fst thing
+  
 -- Takes a cell, most likely found from the 'entropyMin' or 'entropyMinCells' functions,
 -- and updates the grid at that cell
 -- and deletes the key from the entropy Map.
