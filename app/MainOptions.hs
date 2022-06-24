@@ -16,8 +16,7 @@ import Image.CreateImage (gridToImage)
 
 
 data MainOptions = MainOptions
-  { optGenerate :: Bool
-  , optCreate :: Bool
+  { optCreate :: Bool
   , optAdd :: Bool
   , optPrint :: Bool
   , optWeight :: Bool
@@ -25,8 +24,6 @@ data MainOptions = MainOptions
 
 instance Options MainOptions where
   defineOptions = pure MainOptions
-    <*> simpleOption "generate" True
-        "Generate a grid of tiles."
     <*> simpleOption "create" False
         "Create the database."
     <*> simpleOption "add" False
@@ -38,23 +35,12 @@ instance Options MainOptions where
 
 myMain :: IO ()
 myMain = runCommand $ \opts args -> do 
+  when (null args) generateWave
   when (optCreate opts) createDatabase
   when (optAdd opts) insertNewTile
   when (optPrint opts) printDatabase
   when (optWeight opts) changeWeight
-  when (optGenerate opts) generateWave
---  if optCreate opts
---    then createDatabase
---    else if optAdd opts
---         then insertNewTile
---         else if optPrint opts
---              then printDatabase
---              else if optWeight opts
---                   then changeWeight
---                   else 
---                     if optGenerate opts
---                     then generateWave
---                     else return () 
+  
 
 generateWave :: IO ()
 generateWave = do
