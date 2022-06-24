@@ -192,9 +192,13 @@ printDatabase = do
   rows <- rowToVectorIO conn
   mapM_ print (rows :: V.Vector Tile)
   close conn
+  
 
-changeWeight :: Connection -> IO ()
-changeWeight conn = do
+changeWeight :: IO ()
+changeWeight = do
+  myPutStr "Database path: "
+  path <- myGetLine
+  conn <- open path
   myPutStr "Name to update: "
   name <- myGetLine 
   myPutStr "New weight: "
