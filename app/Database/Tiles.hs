@@ -182,8 +182,14 @@ testCreateDatabase = do
 
 insertNewTile :: IO ()
 insertNewTile = do
-  conn <- open "Tiles/test.db"
+  myPutStr "Database path: "
+  path <- myGetLine
+  conn <- open path
   getInsertTile conn
+  --rows <- rowToVectorIO conn
+  --mapM_ print (rows :: V.Vector Tile)
+  close conn
+
 printDatabase :: IO ()
 printDatabase = do
   myPutStr "Database path: "
